@@ -16,7 +16,8 @@ const winston = require('winston'),
     postgres = new (require('./lib/postgres'))(CONFIG.database_url),
     gameData = new (require('./lib/game_data'))(CONFIG.game_files_update_interval, CONFIG.enable_game_file_updates),
     errors = require('./errors'),
-    Job = require('./lib/job');
+    Job = require('./lib/job')
+    async = require('async');
 
 if (CONFIG.max_simultaneous_requests === undefined) {
     CONFIG.max_simultaneous_requests = 1;
@@ -33,9 +34,10 @@ if (args.steam_data) {
     CONFIG.bot_settings.steam_user.dataDirectory = args.steam_data;
 }
 
-for (let loginData of CONFIG.logins) {
+async.eachSeries(CONFIG.logins, (loginData, next) => {
     botController.addBot(loginData, CONFIG.bot_settings);
-}
+    setTimeout(() => next(), 15 * 1000);
+});
 
 postgres.connect();
 
